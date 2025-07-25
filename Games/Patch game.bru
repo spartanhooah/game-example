@@ -1,0 +1,18 @@
+meta {
+  name: Patch game
+  type: http
+  seq: 5
+}
+
+patch {
+  url: http://localhost:8080/games
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Sid Meier's Civilization VI",
+    "id": 1
+  }
+}

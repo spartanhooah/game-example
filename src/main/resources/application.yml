@@ -1,0 +1,9 @@
+quarkus:
+  smallrye-openapi:
+    enabled: true
+    path: /openapi
+    info-title: My API
+    info-version: 1.0.1
+    info-description: API documentation for my application
+  swagger-ui:
+    theme: outline

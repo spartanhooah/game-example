@@ -1,0 +1,19 @@
+meta {
+  name: Replace game
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:8080/games
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": 1,
+    "name": "Sid Meier's Civilization VI",
+    "category": "RTS"
+  }
+}

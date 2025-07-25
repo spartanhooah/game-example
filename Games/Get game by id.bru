@@ -1,0 +1,11 @@
+meta {
+  name: Get game by id
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8080/games/{id}
+  body: none
+  auth: inherit
+}
