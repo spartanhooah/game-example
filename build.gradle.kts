@@ -18,9 +18,10 @@ dependencies {
     implementation("io.quarkus:quarkus-rest")
     implementation("io.quarkus:quarkus-rest-jackson")
     implementation("io.quarkus:quarkus-arc")
-    implementation("org.apache.commons:commons-lang3:3.18.0")
     implementation("io.quarkus:quarkus-smallrye-openapi")
     implementation("io.quarkus:quarkus-swagger-ui")
+    implementation("io.quarkus:quarkus-config-yaml")
+    implementation("org.apache.commons:commons-lang3:3.18.0")
 
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
@@ -44,8 +45,8 @@ tasks.withType<JavaCompile> {
 
 spotless {
     java {
-        palantirJavaFormat()
         removeUnusedImports()
+        palantirJavaFormat()
     }
 }
 

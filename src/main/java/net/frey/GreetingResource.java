@@ -24,11 +24,20 @@ import java.util.List;
 import java.util.stream.IntStream;
 import net.frey.entity.Game;
 import net.frey.entity.ResponseModel;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.jboss.resteasy.reactive.RestQuery;
 
 @Path("/games")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
+@APIResponse(
+        responseCode = "200",
+        description = "Return operation data.",
+        content = @Content(schema = @Schema(implementation = ResponseModel.class)))
 public class GreetingResource {
     private final List<Game> games = new ArrayList<>(List.of(
             new Game(1, "The Elder Scrolls III: Morrowind", "RPG"),
@@ -37,6 +46,14 @@ public class GreetingResource {
             new Game(4, "Beat Saber", "VR")));
 
     @GET
+    @Operation(
+            summary = "Get all games",
+            description =
+                    "Retrieves a paginated list of games. The results can be filtered by game name and sorted by the game category specified in the cookies.")
+    @APIResponse(
+            responseCode = "200",
+            description = "Return games list.",
+            content = @Content(schema = @Schema(implementation = Game.class, type = SchemaType.ARRAY)))
     public Response getGamesList(
             @HeaderParam("page") int page,
             @HeaderParam("size") int size,
@@ -91,6 +108,15 @@ public class GreetingResource {
 
     @GET
     @Path("/{id}")
+    @Operation(summary = "Get game by id", description = "Retrieves specified game by id.")
+    @APIResponse(
+            responseCode = "200",
+            description = "Return game.",
+            content = @Content(schema = @Schema(implementation = Game.class)))
+    @APIResponse(
+            responseCode = "400",
+            description = "Return operation data.",
+            content = @Content(schema = @Schema(implementation = ResponseModel.class)))
     public Response getGame(@PathParam("id") int id) {
         return games.stream()
                 .filter(game -> game.getId() == id)
@@ -107,6 +133,8 @@ public class GreetingResource {
     }
 
     @POST
+    @Operation(summary = "Create a new game", description = "Create a new game.")
+    @APIResponse(responseCode = "204", description = "Game created")
     public Response createGame(Game game) {
         var newId =
                 games.stream().max(Comparator.comparingLong(Game::getId)).get().getId() + 1;
@@ -120,6 +148,12 @@ public class GreetingResource {
     }
 
     @PATCH
+    @Operation(summary = "Update game", description = "Update specified game fields")
+    @APIResponse(responseCode = "204", description = "Game successfully updated.")
+    @APIResponse(
+            responseCode = "400",
+            description = "Return operation data.",
+            content = @Content(schema = @Schema(implementation = ResponseModel.class)))
     public Response updateGame(Game game) {
         games.stream().filter(g -> g.getId() == game.getId()).findFirst().ifPresent(g -> {
             if (isNotEmpty(game.getName())) {
@@ -135,6 +169,12 @@ public class GreetingResource {
     }
 
     @PUT
+    @Operation(summary = "Replace game", description = "Replace game.")
+    @APIResponse(responseCode = "204", description = "Game successfully replaced.")
+    @APIResponse(
+            responseCode = "400",
+            description = "Return operation data.",
+            content = @Content(schema = @Schema(implementation = ResponseModel.class)))
     public Response replaceGame(Game game) {
         IntStream.range(0, games.size())
                 .filter(i -> games.get(i).getId() == game.getId())
@@ -146,6 +186,12 @@ public class GreetingResource {
 
     @DELETE
     @Path("/{id}")
+    @Operation(summary = "Delete game by id", description = "Deletes the game with the specified id")
+    @APIResponse(responseCode = "204", description = "Game successfully deleted.")
+    @APIResponse(
+            responseCode = "400",
+            description = "Return operation data.",
+            content = @Content(schema = @Schema(implementation = ResponseModel.class)))
     public Response deleteGame(@PathParam("id") int id) {
         games.removeIf(game -> game.getId() == id);
 

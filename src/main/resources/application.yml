@@ -6,4 +6,4 @@ quarkus:
     info-version: 1.0.1
     info-description: API documentation for my application
   swagger-ui:
-    theme: outline
+    theme: original
