@@ -1,4 +1,10 @@
 quarkus:
+  datasource:
+    db-kind: postgresql
+#    username: postgres
+#    password: sdawra2183alkjfs
+#    jdbc:
+#      url: jdbc:postgresql://localhost:5432/postgres
   smallrye-openapi:
     enabled: true
     path: /openapi
@@ -7,3 +13,5 @@ quarkus:
     info-description: API documentation for my application
   swagger-ui:
     theme: original
+
+test: test

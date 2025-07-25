@@ -21,6 +21,9 @@ dependencies {
     implementation("io.quarkus:quarkus-smallrye-openapi")
     implementation("io.quarkus:quarkus-swagger-ui")
     implementation("io.quarkus:quarkus-config-yaml")
+    implementation("io.quarkus:quarkus-hibernate-orm-panache")
+    implementation("io.quarkus:quarkus-jdbc-postgresql")
+    implementation("io.quarkus:quarkus-agroal")
     implementation("org.apache.commons:commons-lang3:3.18.0")
 
     testImplementation("io.quarkus:quarkus-junit5")

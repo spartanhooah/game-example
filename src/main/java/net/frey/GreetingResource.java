@@ -4,6 +4,8 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import io.quarkus.logging.Log;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.DELETE;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 import net.frey.entity.Game;
 import net.frey.entity.ResponseModel;
+import net.frey.services.GameService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -45,6 +48,9 @@ public class GreetingResource {
             new Game(3, "Mass Effect", "RPG"),
             new Game(4, "Beat Saber", "VR")));
 
+    @Inject
+    GameService gameService;
+
     @GET
     @Operation(
             summary = "Get all games",
@@ -59,25 +65,22 @@ public class GreetingResource {
             @HeaderParam("size") int size,
             @RestQuery String name,
             @CookieParam("gameCategory") String gameCategory) {
-        var pagedGames = games;
+        if (size < 1) {
+            size = 1;
+        }
+
+        var pagedGames = gameService.findPaginated(page, size);
+
         if (isNotEmpty(name)) {
             pagedGames = pagedGames.stream()
                     .filter(game -> game.getName().toLowerCase().contains(name.toLowerCase()))
                     .toList();
         }
 
-        int totalGames = pagedGames.size();
-        int start;
-        int end;
+        var totalGames = gameService.count();
+        var start = (page - 1) * size;
 
-        if (page > 0 && size > 0) {
-            start = (page - 1) * size;
-            end = Math.min(start + size, totalGames);
-        } else {
-            start = 0;
-            end = totalGames;
-        }
-
+        Log.info("Start: " + start + "; totalGames: " + totalGames);
         if (start >= totalGames) {
             return Response.status(NOT_FOUND).build();
         }
@@ -100,8 +103,6 @@ public class GreetingResource {
                     })
                     .toList();
         }
-
-        pagedGames = pagedGames.subList(start, end);
 
         return Response.ok(pagedGames).header("X-Total-Count", totalGames).build();
     }
