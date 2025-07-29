@@ -2,9 +2,7 @@ package net.frey;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
-import io.quarkus.logging.Log;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.CookieParam;
@@ -20,10 +18,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.IntStream;
 import net.frey.entity.Game;
 import net.frey.entity.ResponseModel;
 import net.frey.services.GameService;
@@ -42,12 +36,6 @@ import org.jboss.resteasy.reactive.RestQuery;
         description = "Return operation data.",
         content = @Content(schema = @Schema(implementation = ResponseModel.class)))
 public class GreetingResource {
-    private final List<Game> games = new ArrayList<>(List.of(
-            new Game(1, "The Elder Scrolls III: Morrowind", "RPG"),
-            new Game(2, "Warframe", "FPS"),
-            new Game(3, "Mass Effect", "RPG"),
-            new Game(4, "Beat Saber", "VR")));
-
     @Inject
     GameService gameService;
 
@@ -66,42 +54,19 @@ public class GreetingResource {
             @RestQuery String name,
             @CookieParam("gameCategory") String gameCategory) {
         if (size < 1) {
-            size = 1;
+            size = 10;
         }
 
-        var pagedGames = gameService.findPaginated(page, size);
-
-        if (isNotEmpty(name)) {
-            pagedGames = pagedGames.stream()
-                    .filter(game -> game.getName().toLowerCase().contains(name.toLowerCase()))
-                    .toList();
+        if (page < 0) {
+            page = 0;
         }
 
-        var totalGames = gameService.count();
+        var pagedGames = gameService.findPaginated(page, size, gameCategory, name);
+        var totalGames = gameService.count(name);
         var start = (page - 1) * size;
 
-        Log.info("Start: " + start + "; totalGames: " + totalGames);
         if (start >= totalGames) {
             return Response.status(NOT_FOUND).build();
-        }
-
-        if (isNotEmpty(gameCategory)) {
-            pagedGames = pagedGames.stream()
-                    .sorted((g1, g2) -> {
-                        var isG1InCategory = gameCategory.equals(g1.getCategory());
-                        var isG2InCategory = gameCategory.equals(g2.getCategory());
-
-                        if (isG1InCategory && !isG2InCategory) {
-                            return -1;
-                        }
-
-                        if (!isG1InCategory && isG2InCategory) {
-                            return 1;
-                        }
-
-                        return 0;
-                    })
-                    .toList();
         }
 
         return Response.ok(pagedGames).header("X-Total-Count", totalGames).build();
@@ -119,9 +84,8 @@ public class GreetingResource {
             description = "Return operation data.",
             content = @Content(schema = @Schema(implementation = ResponseModel.class)))
     public Response getGame(@PathParam("id") int id) {
-        return games.stream()
-                .filter(game -> game.getId() == id)
-                .findFirst()
+        return gameService
+                .findById(id)
                 .map(game -> Response.ok(game)
                         .cookie(new NewCookie.Builder("gameCategory")
                                 .value(game.getCategory())
@@ -137,11 +101,7 @@ public class GreetingResource {
     @Operation(summary = "Create a new game", description = "Create a new game.")
     @APIResponse(responseCode = "204", description = "Game created")
     public Response createGame(Game game) {
-        var newId =
-                games.stream().max(Comparator.comparingLong(Game::getId)).get().getId() + 1;
-
-        game.setId(newId);
-        games.add(game);
+        gameService.createGame(game);
 
         return Response.status(Status.CREATED)
                 .entity(new ResponseModel("Game created", 201))
@@ -156,15 +116,7 @@ public class GreetingResource {
             description = "Return operation data.",
             content = @Content(schema = @Schema(implementation = ResponseModel.class)))
     public Response updateGame(Game game) {
-        games.stream().filter(g -> g.getId() == game.getId()).findFirst().ifPresent(g -> {
-            if (isNotEmpty(game.getName())) {
-                g.setName(game.getName());
-            }
-
-            if (isNotEmpty(game.getCategory())) {
-                g.setCategory(game.getCategory());
-            }
-        });
+        gameService.updateGame(game.getId(), game.getName(), game.getCategory());
 
         return Response.noContent().build();
     }
@@ -177,10 +129,7 @@ public class GreetingResource {
             description = "Return operation data.",
             content = @Content(schema = @Schema(implementation = ResponseModel.class)))
     public Response replaceGame(Game game) {
-        IntStream.range(0, games.size())
-                .filter(i -> games.get(i).getId() == game.getId())
-                .findFirst()
-                .ifPresent(i -> games.set(i, game));
+        gameService.replaceGame(game);
 
         return Response.noContent().build();
     }
@@ -194,7 +143,7 @@ public class GreetingResource {
             description = "Return operation data.",
             content = @Content(schema = @Schema(implementation = ResponseModel.class)))
     public Response deleteGame(@PathParam("id") int id) {
-        games.removeIf(game -> game.getId() == id);
+        gameService.deleteGame(id);
 
         return Response.noContent().build();
     }
