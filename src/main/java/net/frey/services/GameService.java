@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import net.frey.entity.Game;
+import net.frey.exception.MissingGameException;
 import net.frey.repository.GamesRepository;
 
 @ApplicationScoped
@@ -44,22 +45,25 @@ public class GameService {
 
     @Transactional
     public void replaceGame(Game game) {
-        gamesRepository.findByIdOptional(game.getId()).ifPresent(g -> gamesRepository.persist(game));
+        gamesRepository.persist(gamesRepository
+                .findByIdOptional(game.getId())
+                .orElseThrow(() -> new MissingGameException("No game found with id " + game.getId())));
     }
 
     @Transactional
     public void updateGame(long id, String name, String category) {
-        gamesRepository.findByIdOptional(id).ifPresent(g -> {
-            if (isNotEmpty(name)) {
-                g.setName(name);
-            }
+        var foundGame = gamesRepository
+                .findByIdOptional(id)
+                .orElseThrow(() -> new MissingGameException("No game found with id " + id));
+        if (isNotEmpty(name)) {
+            foundGame.setName(name);
+        }
 
-            if (isNotEmpty(category)) {
-                g.setCategory(category);
-            }
+        if (isNotEmpty(category)) {
+            foundGame.setCategory(category);
+        }
 
-            gamesRepository.persist(g);
-        });
+        gamesRepository.persist(foundGame);
     }
 
     @Transactional

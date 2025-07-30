@@ -10,6 +10,6 @@ import org.junit.jupiter.api.Test;
 class GreetingResourceTest {
     @Test
     void testHelloEndpoint() {
-        given().when().get("/games").then().statusCode(200).body("size()", is(1));
+        given().when().get("/games").then().statusCode(200).body("size()", is(3));
     }
 }
